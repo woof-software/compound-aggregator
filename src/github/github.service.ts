@@ -10,7 +10,7 @@ interface CacheEntry {
 @Injectable()
 export class GithubService {
   private readonly logger = new Logger(GithubService.name);
-  private readonly owner = 'compound-finance';
+  private readonly owner = 'Compound-Foundation';
   private readonly repo = 'comet';
   private readonly defaultBranch = 'main';
   private readonly api: AxiosInstance;
@@ -58,6 +58,13 @@ export class GithubService {
     this.inMemoryCache = results;
 
     return results;
+  }
+
+  /**
+   * Builds raw file URL for a path relative to deployments folder
+   */
+  public getRawUrl(relativePath: string): string {
+    return `https://raw.githubusercontent.com/${this.owner}/${this.repo}/${this.defaultBranch}/${this.rootDir}/${relativePath}`;
   }
 
   /**
