@@ -121,12 +121,14 @@ export class MarkdownService {
           'Governance contract',
         ]);
         rowNum++;
-        contractRows.push([
-          rowNum.toString(),
-          'Timelock',
-          contracts.timelock,
-          'Timelock contract',
-        ]);
+        if (contracts.timelock) {
+          contractRows.push([
+            rowNum.toString(),
+            'Timelock',
+            contracts.timelock,
+            'Timelock contract',
+          ]);
+        }
 
         const contractTableMd = markdownTable(
           [contractHeader, ...contractRows],
