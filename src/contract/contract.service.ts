@@ -142,7 +142,12 @@ export class ContractService {
       provider,
     ) as any;
 
-    const governorAddress = await timelockContract.admin();
+    const timelockAdminAddress = await this.getTimelockAdmin(timelockContract);
+    if (!timelockAdminAddress) {
+      this.logger.warn(
+        `${networkPath}: Comet governor ${timelockAddress} is not a Timelock, skipping Timelock`,
+      );
+    }
 
     const curveData: CurveMap = await this.getCurveData(
       cometContract,
@@ -174,13 +179,36 @@ export class ContractService {
         cometFactory: cometFactoryAddress,
         rewards: root.rewards,
         bulker: root.bulker,
-        governor: governorAddress,
-        timelock: timelockAddress,
+        // Without a Timelock the Comet governor itself (e.g. a Safe) governs the market
+        governor: timelockAdminAddress ?? timelockAddress,
+        timelock: timelockAdminAddress ? timelockAddress : '',
       },
       curve: curveData,
       collaterals,
       rewardsTable,
     };
+  }
+
+  /**
+   * Returns the Timelock admin (the Governor), or null when the Comet governor
+   * is not a Timelock (e.g. a Safe multisig without admin()).
+   */
+  private async getTimelockAdmin(
+    timelockContract: any,
+  ): Promise<string | null> {
+    try {
+      return await timelockContract.admin();
+    } catch (err) {
+      // A revert comes back as CALL_EXCEPTION (BAD_DATA through multicall);
+      // anything else (RPC/network failure) must still fail the market.
+      if (
+        ethers.isError(err, 'CALL_EXCEPTION') ||
+        ethers.isError(err, 'BAD_DATA')
+      ) {
+        return null;
+      }
+      throw err;
+    }
   }
 
   private parseAddress(storageValue) {

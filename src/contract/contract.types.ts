@@ -30,7 +30,7 @@ export interface ContractsMap {
   rewards: string;
   bulker: string;
   governor: string;
-  timelock: string;
+  timelock: string; // empty when the Comet governor is not a Timelock (e.g. a Safe multisig)
 }
 
 /**
